@@ -1,7 +1,7 @@
 # UOCNS-SE simulator
 Java web service providing API for simulation of networks on a chip and generation of configuration xml-files.
       
-Aughtors:      
+Authors:      
 Romanov A. Yu. (a.romanov@hse.ru)      
 Stepanov M. A.    
 
@@ -27,7 +27,7 @@ Used frameworks and tools:
 # Steps for deployment
 1. Database preparing:
 
-   Run sql script for database mapping `src/main/resources/database.sql`
+   Run sql script for database mapping `src/main/resources/V1__init.sql`
 
    Change credentials for jdbc connection at `src/main/resources/application.properties`
    

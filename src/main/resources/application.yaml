@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url:
+    driver-class-name:
+    username:
+    password:
+
+generator:
+  results:
+    path: /var/uocns/
