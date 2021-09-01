@@ -1,21 +1,19 @@
 package com.stepanov.uocns.network;
 
-import com.stepanov.uocns.database.entities.Topology;
-import com.stepanov.uocns.database.entities.TopologyReport;
-import com.stepanov.uocns.database.entities.TopologyTable;
-import com.stepanov.uocns.database.services.DatabaseService;
 import com.stepanov.uocns.network.common.IConstants;
-import com.stepanov.uocns.web.services.SimulatorService;
-import org.apache.cayenne.ObjectContext;
-import org.apache.cayenne.query.SelectById;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.stepanov.uocns.web.models.entities.Topology;
+import com.stepanov.uocns.web.models.entities.TopologyReport;
+import com.stepanov.uocns.web.models.entities.TopologyTable;
+import com.stepanov.uocns.web.repositories.TopologyReportRepository;
+import com.stepanov.uocns.web.repositories.TopologyRepository;
+import com.stepanov.uocns.web.repositories.TopologyTableRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-
+@Slf4j
 @Component
+@RequiredArgsConstructor
 public class TControllerOCNS implements IControllerOCNS {
 
     private double fThroughputNetwork;
@@ -35,18 +33,9 @@ public class TControllerOCNS implements IControllerOCNS {
     private double fPacketCountTotalTx;
     private double fPacketCountTotalRx;
 
-    @Autowired
-    DatabaseService databaseService;
-
-    ObjectContext objectContext;
-
-    protected static final Logger log = LoggerFactory.getLogger(SimulatorService.class);
-
-
-    @PostConstruct
-    public void init() {
-        objectContext = databaseService.getContext();
-    }
+    private final TopologyRepository topologyRepository;
+    private final TopologyTableRepository topologyTableRepository;
+    private final TopologyReportRepository topologyReportRepository;
 
     void ResetPerformanceParameters() {
         this.fPacketCountTotalTx = 0.0;
@@ -71,18 +60,17 @@ public class TControllerOCNS implements IControllerOCNS {
 
         TNetworkManager tNetworkManager = new TNetworkManager(configPath);
 
-        Topology topology = SelectById.query(Topology.class, topologyId).selectFirst(objectContext);
+        Topology topology = topologyRepository.getById(topologyId);
 
-        TopologyReport topologyReport = objectContext.newObject(TopologyReport.class);
-        topologyReport.setReportToTopology(topology);
+        TopologyReport topologyReport = new TopologyReport();
+        topologyReport.setTopology(topology);
         topologyReport.setName(IConstants.fConfigNoC.fDescription + ".html");
         StringBuilder topologyReportContent = new StringBuilder();
 
-        TopologyTable topologyTable = objectContext.newObject(TopologyTable.class);
-        topologyTable.setTableToTopology(topology);
+        TopologyTable topologyTable = new TopologyTable();
+        topologyTable.setTopology(topology);
         topologyTable.setName(IConstants.fConfigNoC.fDescription + ".txt");
         StringBuilder topologyTableContent = new StringBuilder();
-
 
         long aCountPercent;
         tNetworkManager.doNetworkSetupNext(false);
@@ -90,7 +78,7 @@ public class TControllerOCNS implements IControllerOCNS {
         IConstants.fConfigNoC.fPacketAvgGenTime = (int) ((double) IConstants.fConfigNoC.fPacketAvgLenght / destInjectionRate);
         this.ResetPerformanceParameters();
         long iCountTotal = IConstants.fConfigNoC.fCountPacketRx * (long) IConstants.fConfigNoC.fCountCores;
-        long aCountNextPersent = aCountPercent = iCountTotal / 100 * (long) IConstants.fConfigNoC.fCountRun;
+        long aCountNextPercent = aCountPercent = iCountTotal / 100 * (long) IConstants.fConfigNoC.fCountRun;
         int simulationProgress = 0;
         int iSimulatorRun = 0;
         while (iSimulatorRun < IConstants.fConfigNoC.fCountRun) {
@@ -129,9 +117,9 @@ public class TControllerOCNS implements IControllerOCNS {
                 iNetwork.doUpdateStatistic(iClock, tNetworkManager);
                 iNetwork.doPrepareNextClock(iClock);
                 int aCountRx = (int) tNetworkManager.getStatistic().getCountPacketRxTotal();
-                if (aCountRx > 0 && (long) aCountRx / aCountNextPersent > 0) {
+                if (aCountRx > 0 && (long) aCountRx / aCountNextPercent > 0) {
                     ++simulationProgress;
-                    aCountNextPersent += aCountPercent;
+                    aCountNextPercent += aCountPercent;
                 }
                 ++iClock;
             } while (simulationProgress < 100);
@@ -178,7 +166,12 @@ public class TControllerOCNS implements IControllerOCNS {
         topologyReport.setContent(topologyReportContent.toString());
         topologyTable.setContent(topologyTableContent.toString());
 
-        objectContext.commitChanges();
+        topologyReportRepository.save(topologyReport);
+        topologyTableRepository.save(topologyTable);
+
+        topology.setTopologyTable(topologyTable);
+        topology.setTopologyReport(topologyReport);
+        topologyRepository.save(topology);
     }
 
     private String getReportParameter(String aParameterName, String aParameterValue) {

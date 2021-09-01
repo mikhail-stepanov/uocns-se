@@ -15,6 +15,7 @@ import com.stepanov.uocns.web.models.dtos.xmlgen.TorusXmlResponse;
 import com.stepanov.uocns.web.models.entities.Topology;
 import com.stepanov.uocns.web.models.entities.TopologyXml;
 import com.stepanov.uocns.web.repositories.TopologyRepository;
+import com.stepanov.uocns.web.repositories.TopologyXmlRepository;
 import com.stepanov.uocns.web.services.util.XmlHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class XmlGeneratorService implements IXmlGeneratorService {
     private final XmlHelper xmlHelper;
 
     private final TopologyRepository topologyRepository;
+    private final TopologyXmlRepository topologyXmlRepository;
 
     @Override
     public CirculantXmlResponse circulant(CirculantXmlRequest request) throws CommonException {
@@ -56,6 +58,7 @@ public class XmlGeneratorService implements IXmlGeneratorService {
             xmlHelper.createXml(circulantNetwork.getNetlist(), circulantNetwork.getRouting(), description, topology.getId());
 
             TopologyXml topologyXml = topologyRepository.getById(topology.getId()).getTopologyXml();
+            topologyXmlRepository.save(topologyXml);
 
             return CirculantXmlResponse.builder()
                     .id(topologyXml.getId())
@@ -87,6 +90,7 @@ public class XmlGeneratorService implements IXmlGeneratorService {
             xmlHelper.createXml(circulantNetwork.getNetlist(), circulantNetwork.getRouting(), description, topology.getId());
 
             TopologyXml topologyXml = topologyRepository.getById(topology.getId()).getTopologyXml();
+            topologyXmlRepository.save(topologyXml);
 
             return CirculantXmlResponse.builder()
                     .id(topologyXml.getId())
@@ -114,6 +118,7 @@ public class XmlGeneratorService implements IXmlGeneratorService {
         xmlHelper.createXml(meshNetwork.getNetlist(), meshNetwork.getRouting(), description, topology.getId());
 
         TopologyXml topologyXml = topologyRepository.getById(topology.getId()).getTopologyXml();
+        topologyXmlRepository.save(topologyXml);
 
         return MeshXmlResponse.builder()
                 .id(topologyXml.getId())
@@ -140,6 +145,7 @@ public class XmlGeneratorService implements IXmlGeneratorService {
         xmlHelper.createXml(torusNetwork.getNetlist(), torusNetwork.getRouting(), description, topology.getId());
 
         TopologyXml topologyXml = topologyRepository.getById(topology.getId()).getTopologyXml();
+        topologyXmlRepository.save(topologyXml);
 
         return TorusXmlResponse.builder()
                 .id(topologyXml.getId())

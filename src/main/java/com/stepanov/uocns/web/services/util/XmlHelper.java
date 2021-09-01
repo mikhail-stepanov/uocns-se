@@ -171,6 +171,9 @@ public class XmlHelper {
 
             topologyXmlRepository.save(topologyXml);
 
+            topology.setTopologyXml(topologyXml);
+            topologyRepository.save(topology);
+
             return configPath;
         } catch (Exception e) {
             log.error("Exception while generating XML-file: " + e.getMessage());

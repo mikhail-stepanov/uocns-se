@@ -41,7 +41,7 @@ public class SimulatorEndpoint {
     }
 
     @CrossOrigin
-    @PostMapping("/circulant")
+    @PostMapping("/torus")
     public TorusResponse torus(@RequestBody TorusRequest request) throws CommonException {
         return simulatorService.torus(request);
     }
